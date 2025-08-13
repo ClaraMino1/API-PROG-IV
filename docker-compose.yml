@@ -1,0 +1,53 @@
+networks:
+  api-trabajo-final-prog-iv.network:
+    driver: bridge
+
+services:
+  php-apache:
+    build: './build/php'
+    restart: unless-stopped
+    container_name: api-trabajo-final-prog-iv.php-apache
+    tty: true
+    depends_on:
+      - mysql
+    networks:
+      - api-trabajo-final-prog-iv.network
+    ports:
+      - "9091:80"
+      - "444:443"
+    volumes:
+      - ./:/var/www/html:rw
+      - ./data/apache/logs:/var/log/apache2
+
+  mysql:
+    image: mysql:5
+    restart: unless-stopped
+    container_name: api-trabajo-final-prog-iv.mysql
+    tty: true
+    ports:
+      - "3308:3306"
+    networks:
+      - api-trabajo-final-prog-iv.network
+    volumes:
+      - "./build/mysql/mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro"
+      - "./data/mysql/dbdata:/var/lib/mysql"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-development}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mysql}
+      MYSQL_USER: ${MYSQL_USER:-mysql}
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: api-trabajo-final-prog-iv.phpmyadmin
+    tty: true
+    depends_on:
+      - mysql
+    ports:
+      - "8082:80"
+    networks:
+      - api-trabajo-final-prog-iv.network
+    environment:
+      PMA_HOST: mysql
+      PMA_ARBITRARY: 1
+      PMA_PORT: 3306
